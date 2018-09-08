@@ -11,7 +11,10 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
+import java.sql.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import Models.Connect;
 /**
  *
  * @author hdeleon
@@ -27,14 +30,31 @@ public class Login extends HttpServlet {
      * @throws ServletException if a servlet-specific error occurs
      * @throws IOException if an I/O error occurs
      */
+     
+   
+    private boolean authenticate(String user, String pwd) {
+        Connect cnn = new Connect("localhost", "sist_ctrl_inv", "sa", "sa");
+        
+        if (cnn.open()) {
+            try {
+                
+                boolean exists = cnn.query("SELECT 1 FROM USUARIO WHERE USUARIO='" + user + "' AND CONTRASEÑA='" + pwd + "' AND ESTATUS='A'").next();
+                return exists;
+            } catch (SQLException ex) {
+                Logger.getLogger(Login.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        return false;
+    }
+    
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
-        if (request.getParameter("user").equals("hdl") && request.getParameter("pwd").equals("hdl")) {
+        if (authenticate(request.getParameter("user"), request.getParameter("pwd"))) {
             request.getSession().setAttribute("user", request.getParameter("user"));
             request.getRequestDispatcher("menu.jsp").forward(request, response);
         } else {
-            request.getRequestDispatcher("index.html").forward(request, response);
+            request.getRequestDispatcher("index.jsp").forward(request, response);
         }
     }
 
